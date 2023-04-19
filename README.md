@@ -105,5 +105,15 @@ Compare the first elements of A and B: c = c, add (c, c) to M and remove c from 
 Compare the first elements of A and B: b < d, add (c, b) to M and remove b from A.
 Compare the first elements of B and A: b < d, add (b, d) to M and remove b and d from B.
 Add the remaining element of A to M: add (d, d) to M and remove d from A.
-Merged tuples: M = {(a, a), (a, b), (a, c), (b, d), (c, b), (c, c), (d, d)}
+Merged tuples: `M = {(a, a), (a, b), (a, c), (b, d), (c, b), (c, c), (d, d)}`
 The set of merged tuples M represents the original partial order.
+
+
+**Lamport's scalar clock** rules are a set of rules that define how to update a logical clock based on events that occur in a distributed system. The rules are:
+
+* Initialization: Each process has a clock that is initially set to zero.
+* Event increment: Each time an event occurs at a process, its clock is incremented by one.
+* Send timestamping: When a process sends a message, it includes its current clock value in the message.
+* Receive timestamping: When a process receives a message, it sets its clock to the maximum of its current clock value and the timestamp in the received message, and then increments its clock by one.
+
+These rules ensure that the logical clocks of different processes are monotonically increasing and that causally related events have consistent ordering across the distributed system. However, they do not guarantee that non-causal events have a consistent ordering.
