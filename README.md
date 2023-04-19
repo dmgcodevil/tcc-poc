@@ -1,5 +1,6 @@
 # distributed-computing
-distributed-computing knowledge base
+
+Transactional Causal Consistency (TCC) system 
 
 
 ### Partial order
