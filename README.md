@@ -2,6 +2,7 @@
 
 Transactional Causal Consistency (TCC) system 
 
+## Prerequisites / Knowledge base 
 
 ### Partial order
 
