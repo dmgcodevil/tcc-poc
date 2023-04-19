@@ -75,3 +75,15 @@ However, this linear extension is not consistent with the "divides" relation, si
 
 In summary, a linear extension of a partial order is a way to extend the partial order to a total order while preserving the order relations in the partial order. This concept is often used in the context of distributed systems or computer networks, where partial orders are used to represent the ordering of events across multiple processes or systems.
 
+Example:
+
+Consider the following partial order on events {a, b, c, d}:
+
+a precedes b and c
+b and c both precede d
+One possible linear extension consistent with this partial order is: a, b, c, d.
+
+Another possible linear extension is: a, c, b, d.
+
+Both of these linear extensions are consistent with the original partial order, as they preserve the causal relationships between the events. But they represent different linear orderings of the events on the time axis, and may imply different causality relationships between the events.
+
