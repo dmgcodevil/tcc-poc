@@ -117,3 +117,25 @@ The set of merged tuples M represents the original partial order.
 * Receive timestamping: When a process receives a message, it sets its clock to the maximum of its current clock value and the timestamp in the received message, and then increments its clock by one.
 
 These rules ensure that the logical clocks of different processes are monotonically increasing and that causally related events have consistent ordering across the distributed system. However, they do not guarantee that non-causal events have a consistent ordering.
+
+
+### Transactional Causal Consistency (TCC)
+
+Main components:
+
+1. Function Executors: The compute nodes responsible for executing the client-defined functions.
+2. Transaction Coordinator Service: The central service responsible for coordinating and managing the transaction lifecycle, including validation, pre-write, commit, and abort.
+3. Causal Consistency Checker: The service responsible for checking the causal consistency of the transaction before it is committed.
+4. Dependency Graph Storage: The persistent storage system that stores the dependency graph for each transaction.
+5. Client Application: The application that interacts with the TCC system to perform business operations and define custom functions.
+
+These components work together to provide transactional causal consistency for serverless computing.
+
+### Dependency graph shapshots/checkpoints
+
+Checkpointing can be used to reduce the size of event dependency graph on every function executor. Checkpointing involves periodically taking a snapshot of the state of the system and storing it in a durable storage. This can be done at regular intervals or based on the size of the dependency graph.
+
+Once a checkpoint is taken, any events that have already been processed can be removed from the dependency graph, and only the events after the checkpoint need to be retained. This reduces the size of the dependency graph and the amount of data that needs to be stored and transmitted between the function executors and the TCC.
+
+However, checkpointing introduces additional overhead as it involves taking snapshots of the state of the system, which can be a time-consuming process. Therefore, the frequency of checkpoints should be balanced between reducing the size of the dependency graph and minimizing the overhead of checkpointing.
+
