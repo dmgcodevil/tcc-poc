@@ -87,3 +87,23 @@ Another possible linear extension is: a, c, b, d.
 
 Both of these linear extensions are consistent with the original partial order, as they preserve the causal relationships between the events. But they represent different linear orderings of the events on the time axis, and may imply different causality relationships between the events.
 
+merge the linear extensions A = [a, b, c, d] and B = [a, c, b, d] into a single set of tuples that represents the original partial order. Here is a simple algorithm to merge two linear extensions:
+
+Initialize an empty set M to store the merged tuples.
+Compare the first elements of the two linear extensions. If they are equal, add the corresponding tuple to M and remove the elements from both linear extensions.
+If the first element of A precedes the first element of B in the original partial order, add the corresponding tuple to M and remove the element from A.
+If the first element of B precedes the first element of A in the original partial order, add the corresponding tuple to M and remove the element from B.
+Repeat steps 2-4 until one of the linear extensions is empty.
+Add any remaining tuples from the non-empty linear extension to M.
+Using this algorithm, we can merge the linear extensions A and B as follows:
+
+Initialize an empty set M: M = {}
+Compare the first elements of A and B: a = a, add (a, a) to M and remove a from both A and B.
+Compare the first elements of A and B: b < c, add (a, b) to M and remove b from A.
+Compare the first elements of B and A: c < b, add (a, c) to M and remove c from B.
+Compare the first elements of A and B: c = c, add (c, c) to M and remove c from both A and B.
+Compare the first elements of A and B: b < d, add (c, b) to M and remove b from A.
+Compare the first elements of B and A: b < d, add (b, d) to M and remove b and d from B.
+Add the remaining element of A to M: add (d, d) to M and remove d from A.
+Merged tuples: M = {(a, a), (a, b), (a, c), (b, d), (c, b), (c, c), (d, d)}
+The set of merged tuples M represents the original partial order.
