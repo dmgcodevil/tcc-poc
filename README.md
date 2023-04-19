@@ -141,3 +141,13 @@ Once a checkpoint is taken, any events that have already been processed can be r
 
 However, checkpointing introduces additional overhead as it involves taking snapshots of the state of the system, which can be a time-consuming process. Therefore, the frequency of checkpoints should be balanced between reducing the size of the dependency graph and minimizing the overhead of checkpointing.
 
+
+To implement a Transaction Coordinator Service (TCS), the following are needed:
+
+1. A distributed database or key-value store: This is needed to store the metadata related to transactions and events such as transaction ID, event ID, event type, event payload, timestamp, and the causal dependencies between events.
+2. A messaging system: This is needed for communication between the TCS and function executors. The messaging system should support reliable delivery, ordering, and at-least-once semantics.
+3. A Causal Consistency Checker: This is a component that determines the causal dependencies between events by analyzing their metadata. It needs to be highly available and scalable since it will be used by every function executor.
+4. Function executors: These are the compute nodes that execute the functions submitted by the clients. They need to be able to retrieve the causal dependencies for the events they process, so they can ensure causal consistency.
+5. Client libraries: These are libraries or SDKs that the clients can use to interact with the TCS. They should provide an easy-to-use interface for submitting events and transactions and also handle the retry logic in case of failures.
+6. Rollback handlers: These are functions that handle the rollback logic in case of transaction failures. They need to be provided by the clients since they have the most knowledge about the underlying data store.
+7. Monitoring and alerting: This is needed to monitor the health of the system and alert the operators in case of failures or anomalies.
