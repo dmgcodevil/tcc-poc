@@ -151,3 +151,87 @@ To implement a Transaction Coordinator Service (TCS), the following are needed:
 5. Client libraries: These are libraries or SDKs that the clients can use to interact with the TCS. They should provide an easy-to-use interface for submitting events and transactions and also handle the retry logic in case of failures.
 6. Rollback handlers: These are functions that handle the rollback logic in case of transaction failures. They need to be provided by the clients since they have the most knowledge about the underlying data store.
 7. Monitoring and alerting: This is needed to monitor the health of the system and alert the operators in case of failures or anomalies.
+
+
+### causal dependency graph (draft)
+
+```
+// Define a class Node with id, vector_clock, and child properties
+class Node:
+    // Constructor to initialize the node
+    function Node(id, vector_clock):
+        this.id = id
+        this.vector_clock = vector_clock
+        this.child = []
+
+    // Compare the current node with another node
+    function compareTo(otherNode):
+        for i in range(len(vector_clock)):
+            if vector_clock[i] < otherNode.vector_clock[i]:
+                return -1
+            else if vector_clock[i] > otherNode.vector_clock[i]:
+                return 1
+        return 0
+
+    // Check whether two nodes are equal
+    function equals(otherNode):
+        return id == otherNode.id
+
+    // Calculate the hashcode of the node
+    function hashCode():
+        return id.hashCode()
+
+// Define an interface Graph
+interface Graph:
+    // Insert a node into the graph
+    function insert(n)
+
+    // Get nodes that happen before a given node
+    function searchDeps(n)
+
+// Implement the Graph interface
+class GraphImpl implements Graph:
+    // Create a root node with an empty vector_clock
+    Node root = Node("root", [])
+
+    // Insert a node into the graph
+    function insert(current, newNode):
+        if current.child is empty:
+            current.child.add(newNode)
+            return true
+
+        // Find nodes that happen before the new node
+        happensBeforeNodes = current.child.filter(lambda n: newNode.compareTo(n) >= 0)
+
+        if size of happensBeforeNodes > 1:
+            throw an exception "Only one node can happen before the new node"
+
+        if happensBeforeNodes is not empty:
+            newNode.child.add(happensBeforeNodes[0])
+            current.child.remove(happensBeforeNodes[0])
+            current.child.add(newNode)
+
+        for node in current.child:
+            if insert(node, newNode):
+                return true
+
+        throw an exception "The first check should handle this case"
+
+    // Insert a node into the graph
+    function insert(n):
+        insert(root, n)
+
+    // Get nodes that happen before a given node
+    function searchDeps(current, n, res):
+        if n.compareTo(current) > 0:
+            res.add(current)
+            for child in current.child:
+                searchDeps(child, n, res)
+
+    // Get nodes that happen before a given node
+    function searchDeps(n):
+        res = []
+        searchDeps(root, n, res)
+        return res
+
+```
