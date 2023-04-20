@@ -156,82 +156,71 @@ To implement a Transaction Coordinator Service (TCS), the following are needed:
 ### causal dependency graph (draft)
 
 ```
-// Define a class Node with id, vector_clock, and child properties
-class Node:
-    // Constructor to initialize the node
-    function Node(id, vector_clock):
-        this.id = id
-        this.vector_clock = vector_clock
-        this.child = []
-
-    // Compare the current node with another node
-    function compareTo(otherNode):
-        for i in range(len(vector_clock)):
-            if vector_clock[i] < otherNode.vector_clock[i]:
-                return -1
-            else if vector_clock[i] > otherNode.vector_clock[i]:
-                return 1
-        return 0
-
-    // Check whether two nodes are equal
-    function equals(otherNode):
-        return id == otherNode.id
-
-    // Calculate the hashcode of the node
-    function hashCode():
-        return id.hashCode()
-
-// Define an interface Graph
-interface Graph:
-    // Insert a node into the graph
-    function insert(n)
-
-    // Get nodes that happen before a given node
-    function searchDeps(n)
-
-// Implement the Graph interface
 class GraphImpl implements Graph:
-    // Create a root node with an empty vector_clock
-    Node root = Node("root", [])
+    root: Node
+    vectorSize: int
 
-    // Insert a node into the graph
-    function insert(current, newNode):
-        if current.child is empty:
-            current.child.add(newNode)
-            return true
+    GraphImpl(vectorSize: int):
+        this.vectorSize = vectorSize
+        this.root = Node("root", new int[vectorSize])
 
-        // Find nodes that happen before the new node
-        happensBeforeNodes = current.child.filter(lambda n: newNode.compareTo(n) >= 0)
-
-        if size of happensBeforeNodes > 1:
-            throw an exception "Only one node can happen before the new node"
-
-        if happensBeforeNodes is not empty:
-            newNode.child.add(happensBeforeNodes[0])
-            current.child.remove(happensBeforeNodes[0])
-            current.child.add(newNode)
-
-        for node in current.child:
-            if insert(node, newNode):
-                return true
-
-        throw an exception "The first check should handle this case"
-
-    // Insert a node into the graph
-    function insert(n):
+    insert(n: Node) -> void:
+        if exists(n) then throw IllegalArgumentException("node already exists in the graph")
         insert(root, n)
 
-    // Get nodes that happen before a given node
-    function searchDeps(current, n, res):
-        if n.compareTo(current) > 0:
-            res.add(current)
-            for child in current.child:
-                searchDeps(child, n, res)
+    insert(current: Node, newNode: Node) -> bool:
+        if current.child.isEmpty() then
+            current.child.add(newNode)
+            return true
+        hbNodes = current.child.stream()
+                  .filter(child -> newNode.compareTo(child) > 0)
+                  .collect(Collectors.toList())
+        if not hbNodes.isEmpty() then
+            for hbNode in hbNodes do
+                newNode.child.add(hbNode)
+                current.child.remove(hbNode)
+            current.child.add(newNode)
+            return true
+        else:
+            for node in current.child do
+                if insert(node, newNode) then return true
+            throw IllegalStateException("Unreachable code - new node could not be inserted.")
 
-    // Get nodes that happen before a given node
-    function searchDeps(n):
-        res = []
+    searchDeps(n: Node) -> List<Node>:
+        if not exists(n) then throw IllegalArgumentException("node n doesn't exist")
+        res = new ArrayList<Node>()
         searchDeps(root, n, res)
         return res
 
+    searchDeps(current: Node, n: Node, res: List<Node>) -> void:
+        for child in current.child do
+            searchDeps(child, n, res)
+        if n.compareTo(current) > 0 and current != root then
+            res.add(current)
+
+    exists(n: Node) -> bool:
+        return exists(root, n)
+
+    exists(current: Node, n: Node) -> bool:
+        if current == n then return true
+        for child in current.child do
+            if exists(child, n) then return true
+        return false
+
 ```
+
+Explanation:
+
+
+1. `insert(Node n)`: This method is used to insert a new node into the DAG. If the node already exists in the graph, an exception is thrown. The method first checks if the current node has any child nodes. If not, it adds the new node as the first child of the current node. Otherwise, it finds all child nodes that happened before the new node (i.e., all nodes that have a causal relationship with the new node), moves them under the new node, and then adds the new node as a child of the current node.
+
+2. `searchDeps(Node n)`: This method is used to search for all nodes in the graph that are causally dependent on a given node n. If n does not exist in the graph, an exception is thrown. The method recursively traverses the graph and adds all nodes that are causally dependent on n to a list res.
+
+3. `exists(Node n)`: This method is used to check if a given node n exists in the graph. The method recursively traverses the graph and returns true if the node is found, and false otherwise.
+
+
+
+
+
+
+
