@@ -1,8 +1,10 @@
 const std = @import("std");
 const test_allocator = std.testing.allocator;
+const Allocator = std.mem.Allocator;
 
 //Represents a node in a causal dependency graph.
 pub const Node = struct {
+    allocator: Allocator,
     id: []const u8, // the unique identifier of this node
     vector_clock: []const u32, // an array representing the vector clock of this node
     child: std.ArrayList(*Node), // the child nodes of this node
@@ -42,92 +44,113 @@ pub const Node = struct {
 
     pub fn deinit(self: *Node) void {
         self.child.deinit();
+        self.allocator.destroy(self);
     }
 };
 
+pub fn create(allocator: Allocator, id: []const u8, vector_clock: []const u32, child: std.ArrayList(*Node)) !*Node {
+    var node = try allocator.create(Node);
+    node.allocator = allocator;
+    node.id = id;
+    node.vector_clock = vector_clock;
+    node.child = child;
+    return node;
+}
+
 test "Node addChild" {
-    var root = Node{
-        .id = "root",
-        .vector_clock = &[_]u32{ 1, 0, 0 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var root = try create(
+        test_allocator,
+        "root",
+        &[_]u32{ 1, 0, 0 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer root.deinit();
-    var child = Node{
-        .id = "child",
-        .vector_clock = &[_]u32{ 1, 1, 0 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var child = try create(
+        test_allocator,
+        "child",
+        &[_]u32{ 1, 1, 0 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer child.deinit();
-    try root.addChild(&child);
-    try std.testing.expectEqual(root.child.items[0], &child);
+    try root.addChild(child);
+    try std.testing.expectEqual(root.child.items[0], child);
 }
 
 test "Node compare" {
-    var node1 = Node{
-        .id = "node1",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node1 = try create(
+        test_allocator,
+        "node1",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node1.deinit();
-    var node2 = Node{
-        .id = "node2",
-        .vector_clock = &[_]u32{ 1, 2, 4 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node2 = try create(
+        test_allocator,
+        "node2",
+        &[_]u32{ 1, 2, 4 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node2.deinit();
-    var node3 = Node{
-        .id = "node3",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node3 = try create(
+        test_allocator,
+        "node3",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node3.deinit();
-    try std.testing.expect(node1.compare(&node2) == -1);
-    try std.testing.expect(node2.compare(&node1) == 1);
-    try std.testing.expect(node1.compare(&node3) == 0);
+    try std.testing.expect(node1.compare(node2) == -1);
+    try std.testing.expect(node2.compare(node1) == 1);
+    try std.testing.expect(node1.compare(node3) == 0);
 }
 
 test "Node equals" {
-    var node1 = Node{
-        .id = "node1",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node1 = try create(
+        test_allocator,
+        "node1",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node1.deinit();
-    var node2 = Node{
-        .id = "node2",
-        .vector_clock = &[_]u32{ 1, 2, 4 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node2 = try create(
+        test_allocator,
+        "node2",
+        &[_]u32{ 1, 2, 4 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node2.deinit();
-    var node3 = Node{
-        .id = "node1",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node3 = try create(
+        test_allocator,
+        "node1",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node3.deinit();
-    try std.testing.expect(node1.equals(&node2) == false);
-    try std.testing.expect(node2.equals(&node1) == false);
-    try std.testing.expect(node1.equals(&node3) == true);
+    try std.testing.expect(node1.equals(node2) == false);
+    try std.testing.expect(node2.equals(node1) == false);
+    try std.testing.expect(node1.equals(node3) == true);
 }
 
 test "Node hashCode" {
-    var node1 = Node{
-        .id = "node1",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node1 = try create(
+        test_allocator,
+        "node1",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node1.deinit();
-    var node2 = Node{
-        .id = "node2",
-        .vector_clock = &[_]u32{ 1, 2, 4 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node2 = try create(
+        test_allocator,
+        "node2",
+        &[_]u32{ 1, 2, 4 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node2.deinit();
-    var node3 = Node{
-        .id = "node1",
-        .vector_clock = &[_]u32{ 1, 2, 3 },
-        .child = std.ArrayList(*Node).init(test_allocator),
-    };
+    var node3 = try create(
+        test_allocator,
+        "node1",
+        &[_]u32{ 1, 2, 3 },
+        std.ArrayList(*Node).init(test_allocator),
+    );
     defer node3.deinit();
     try std.testing.expect(node1.hashCode() != node2.hashCode());
     try std.testing.expect(node1.hashCode() == node3.hashCode());
