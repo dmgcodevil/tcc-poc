@@ -43,12 +43,17 @@ pub const Node = struct {
     }
 
     pub fn deinit(self: *Node) void {
+        //std.debug.print("\n\n{s}\n\n", .{"bye"});
         self.child.deinit();
         self.allocator.destroy(self);
     }
 };
 
-pub fn create(allocator: Allocator, id: []const u8, vector_clock: []const u32, child: std.ArrayList(*Node)) !*Node {
+pub fn create(allocator: Allocator, id: []const u8, vector_clock: []const u32) !*Node {
+    return try create_with_child(allocator, id, vector_clock, std.ArrayList(*Node).init(allocator));
+}
+
+pub fn create_with_child(allocator: Allocator, id: []const u8, vector_clock: []const u32, child: std.ArrayList(*Node)) !*Node {
     var node = try allocator.create(Node);
     node.allocator = allocator;
     node.id = id;
@@ -62,14 +67,12 @@ test "Node addChild" {
         test_allocator,
         "root",
         &[_]u32{ 1, 0, 0 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer root.deinit();
     var child = try create(
         test_allocator,
         "child",
         &[_]u32{ 1, 1, 0 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer child.deinit();
     try root.addChild(child);
@@ -81,21 +84,18 @@ test "Node compare" {
         test_allocator,
         "node1",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node1.deinit();
     var node2 = try create(
         test_allocator,
         "node2",
         &[_]u32{ 1, 2, 4 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node2.deinit();
     var node3 = try create(
         test_allocator,
         "node3",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node3.deinit();
     try std.testing.expect(node1.compare(node2) == -1);
@@ -108,21 +108,18 @@ test "Node equals" {
         test_allocator,
         "node1",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node1.deinit();
     var node2 = try create(
         test_allocator,
         "node2",
         &[_]u32{ 1, 2, 4 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node2.deinit();
     var node3 = try create(
         test_allocator,
         "node1",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node3.deinit();
     try std.testing.expect(node1.equals(node2) == false);
@@ -135,21 +132,18 @@ test "Node hashCode" {
         test_allocator,
         "node1",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node1.deinit();
     var node2 = try create(
         test_allocator,
         "node2",
         &[_]u32{ 1, 2, 4 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node2.deinit();
     var node3 = try create(
         test_allocator,
         "node1",
         &[_]u32{ 1, 2, 3 },
-        std.ArrayList(*Node).init(test_allocator),
     );
     defer node3.deinit();
     try std.testing.expect(node1.hashCode() != node2.hashCode());
