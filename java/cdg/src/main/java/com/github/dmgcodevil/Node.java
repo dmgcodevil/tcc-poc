@@ -3,6 +3,7 @@ package com.github.dmgcodevil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents a node in a causal dependency graph.
@@ -19,7 +20,7 @@ public class Node implements Comparable<Node> {
         this(id, vector_clock, new ArrayList<>());
     }
 
-    public Node(String id, int[] vector_clock,List<Node>child) {
+    public Node(String id, int[] vector_clock, List<Node> child) {
         this.id = id;
         this.vector_clock = vector_clock;
         this.child = child;
@@ -83,11 +84,12 @@ public class Node implements Comparable<Node> {
 
     @Override
     public String toString() {
+        String ids = child.stream().map(c -> c.id).collect(Collectors.joining(","));
         return "Node{" +
                 "id='" + id + '\'' +
                 ", vector_clock=" + Arrays.toString(vector_clock) +
-                ", child=" + child +
-                '}';
+                ", child=[" + ids +
+                "]}";
     }
 }
 
