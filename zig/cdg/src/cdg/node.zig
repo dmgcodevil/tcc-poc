@@ -42,8 +42,22 @@ pub const Node = struct {
         return std.hash.CityHash64.hash(self.id);
     }
 
+    pub fn childIds(self: *Node) ![]u8 {
+        var list = std.ArrayList([]const u8).init(self.allocator);
+        defer list.deinit();
+        for (self.child.items) |child| {
+            try list.append(child.id);
+        }
+        return try std.mem.join(self.allocator, ",", list.items);
+    }
+
+    pub fn toString(self: *Node) ![]u8 {
+        var ids = try self.childIds();
+        defer self.allocator.free(ids);
+        return try std.fmt.allocPrint(self.allocator, "node[id={s}, vc={any}, child=[{s}]]", .{ self.id, self.vector_clock, ids });
+    }
+
     pub fn deinit(self: *Node) void {
-        //std.debug.print("\n\n{s}\n\n", .{"bye"});
         self.child.deinit();
         self.allocator.destroy(self);
     }
@@ -60,6 +74,21 @@ pub fn create_with_child(allocator: Allocator, id: []const u8, vector_clock: []c
     node.vector_clock = vector_clock;
     node.child = child;
     return node;
+}
+
+pub fn toIds(allocator: Allocator, nodes: []*Node) ![][]const u8 {
+    var ids = std.ArrayList([]const u8).init(allocator);
+    defer ids.deinit();
+    for (nodes) |node| {
+        try ids.append(node.id);
+    }
+    return ids.toOwnedSlice();
+}
+
+pub fn joinIds(allocator: Allocator, nodes: []*Node) ![]u8 {
+    var ids = try toIds(allocator, nodes);
+    defer allocator.free(ids);
+    return try std.mem.join(allocator, ",", ids);
 }
 
 test "Node addChild" {
