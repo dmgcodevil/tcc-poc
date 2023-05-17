@@ -2,36 +2,51 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::vec::Vec;
 
-#[derive(Debug, Eq, PartialOrd)]
-pub struct Node<'a> {
-    id: &'a str,
+#[derive(Debug, Eq, PartialOrd, Clone)]
+pub struct Node {
+    id: String,
     vector_clock: Vec<i32>,
-    child: Vec<Node<'a>>,
+    child: Vec<Node>,
 }
 
-impl<'a> Node<'a> {
-    pub fn new(id: &'a str, vector_clock: Vec<i32>) -> Self {
+impl Node {
+    pub fn new(id: &str, vector_clock: Vec<i32>) -> Self {
         Self {
-            id,
+            id: id.to_string(),
             vector_clock,
             child: vec![],
         }
     }
     pub fn get_id(&self) -> &str {
-        return self.id;
+        return &self.id;
     }
-    pub fn add_child(&mut self, child: Node<'a>) {
+    pub fn get_child(&self) -> &Vec<Node> {
+        return &self.child;
+    }
+    pub fn get_child_mut(&mut self) -> &mut Vec<Node> {
+        &mut self.child
+    }
+    pub fn add_child(&mut self, child: Node) {
         self.child.push(child);
+    }
+
+    pub fn remove_child(&mut self, child: &Node) -> bool {
+        if let Some(index) = self.child.iter().position(|c| *c == *child) {
+            self.child.remove(index);
+            true
+        } else {
+            false
+        }
     }
 }
 
-impl PartialEq for Node<'_> {
+impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id && self.cmp(other) == Ordering::Equal
     }
 }
 
-impl Ord for Node<'_> {
+impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
         for i in 0..self.vector_clock.len() {
             if self.vector_clock[i] < other.vector_clock[i] {
@@ -44,9 +59,10 @@ impl Ord for Node<'_> {
     }
 }
 
-impl fmt::Display for Node<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let ids = self.child.iter().map(|c| c.id).collect::<Vec<&str>>().join(",");
+impl fmt::Display for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let ids = self.child.iter().map(|c| c.id.as_str())
+            .collect::<Vec<&str>>().join(",");
         write!(
             f,
             "Node{{id: '{}', vector_clock: {:?}, child: [{}]}}",
