@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 use crate::node::Node;
 
+// Represents a causal dependency graph
 pub struct Graph {
     root: Rc<RefCell<Node>>,
 }
