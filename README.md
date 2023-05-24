@@ -221,16 +221,13 @@ Explanation:
 
 ### Snapshot Construction / Causal snapshot reads  
 
- A snapshot in the context of TCC ensures that all events that are causally related to a given key are processed or considered before executing a particular function. It serves as a checkpoint or reference point that captures the causal dependencies between events.
+In the context of TCC, the creation of a snapshot typically occurs when a function is invoked to process an event. The purpose of creating a snapshot is to capture the relevant set of events that are causally related to the event being processed.
 
-The snapshot itself does not contain the events; it is a logical concept or representation that defines the set of events that should be considered when executing a function. The snapshot defines the boundaries or scope of events that are relevant for maintaining causal consistency.
+When a function is triggered to handle an event, it examines the causal dependencies associated with that event. It constructs a snapshot by including all the events that causally precede the current event or have a causal relationship with it. This snapshot serves as the reference point for maintaining causal consistency during the execution of the function.
 
-When constructing a snapshot, you traverse the causal dependency graph to identify all the events that causally precede the current event or have a causal relationship with it. This includes events that directly depend on the current event and events that transitively depend on it.
+The function uses this snapshot to ensure that it has access to all the necessary information and dependencies required to process the event correctly. It can then perform any required operations, such as reading data, applying transformations, or generating new events, based on the information available within the snapshot.
 
-By ensuring that all causally related events are processed or considered within the snapshot, you maintain the causal order and dependencies between events. This guarantees that functions are executed in a way that reflects the causality specified by the event log and the causal dependency graph.
-
-In summary, a snapshot represents the logical checkpoint where all events that are causally related to a given key have been processed or accounted for, ensuring the maintenance of causal consistency in the system.
-
+By creating a snapshot specific to each event being processed, the function guarantees that it considers the relevant events within its causal context. This enables it to maintain the desired causal consistency and order of event processing.
 
 
 
