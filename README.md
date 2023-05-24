@@ -219,6 +219,17 @@ Explanation:
 3. `exists(Node n)`: This method is used to check if a given node n exists in the graph. The method recursively traverses the graph and returns true if the node is found, and false otherwise.
 
 
+### Snapshot Construction / Causal snapshot reads  
+
+ A snapshot in the context of TCC ensures that all events that are causally related to a given key are processed or considered before executing a particular function. It serves as a checkpoint or reference point that captures the causal dependencies between events.
+
+The snapshot itself does not contain the events; it is a logical concept or representation that defines the set of events that should be considered when executing a function. The snapshot defines the boundaries or scope of events that are relevant for maintaining causal consistency.
+
+When constructing a snapshot, you traverse the causal dependency graph to identify all the events that causally precede the current event or have a causal relationship with it. This includes events that directly depend on the current event and events that transitively depend on it.
+
+By ensuring that all causally related events are processed or considered within the snapshot, you maintain the causal order and dependencies between events. This guarantees that functions are executed in a way that reflects the causality specified by the event log and the causal dependency graph.
+
+In summary, a snapshot represents the logical checkpoint where all events that are causally related to a given key have been processed or accounted for, ensuring the maintenance of causal consistency in the system.
 
 
 
